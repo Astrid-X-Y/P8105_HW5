@@ -73,3 +73,104 @@ birthday_stat |>
   )
 ```
 The probability of at least two people sharing a birthday increases with group size. This result makes sense because larger groups contain more people, increasing the chance of shared birthdays. The probability approaches 1 but does not reach 1 within the simulated group sizes, since there is still a small chance that everyone has a different birthday.
+
+
+## Q2 Longitudinal Study
+```{r}
+# List files
+participant =
+  tibble(files = list.files("data/data/"))
+
+participant =
+  participant |>
+  mutate(
+    path = str_c("data/data/", files))
+
+participant
+
+# Read files and save as new variable
+participant =
+  participant |>
+  mutate(data = map(path, read_csv)
+  )
+
+participant
+```
+
+```{r}
+# Tidy-up: Unnest → Extract group → Reshape weekly data (wide to long) → Finalize
+participant_tidy =
+  participant |>
+  unnest(data)
+
+participant_tidy =
+  participant_tidy |>
+  mutate(
+    group = str_sub(files, 1, 3),
+    subj = str_sub(files, 1, 6))
+
+participant_tidy =
+  participant_tidy |>
+  mutate(
+    group = str_sub(files, 1, 3))
+
+participant_tidy =
+  participant_tidy |>
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    values_to = "outcome",
+    names_prefix = "week_"
+  )
+
+participant_tidy =
+  participant_tidy |>
+  select(
+    group,
+    subj = files,
+    week,
+    outcome)
+
+participant_tidy
+
+# Subject ID revision
+participant_tidy =
+  participant_tidy |>
+  mutate(
+    subj = str_replace(subj, ".csv", ""))
+
+participant_tidy
+```
+
+```{r}
+# Plot
+participant_tidy |>
+  ggplot(aes(x = week, y = outcome,
+             group = subj, color = group)) +
+  geom_point() +
+  geom_path() +
+  facet_grid(~group) +
+  labs(
+    title = "Longitudinal Outcomes by Study Group",
+    x = "Week",
+    y = "Outcome")
+
+# No noticeable difference in the plot whether week treated as character or numeric, but technically it should be numerical to represents time
+participant_tidy =
+  participant_tidy |>
+  mutate(
+    week = as.numeric(week)
+  )
+
+participant_tidy |>
+  ggplot(aes(x = week, y = outcome,
+             group = subj, color = group)) +
+  geom_point() +
+  geom_path() +
+  facet_grid(~group) +
+  labs(
+    title = "Longitudinal Outcomes by Study Group",
+    x = "Week",
+    y = "Outcome")
+```
+The control group shows fluctuations in outcome over time around approximately 1.25, while the experimental group shows a generally increasing trend across the eight weeks with higher outcome values toward the end of the study.
