@@ -1,0 +1,11 @@
+---
+title: "P8105 Homework 5"
+author: "Astrid Xu"
+date: "2026-11-18"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+set.seed(1)
+```
