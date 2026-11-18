@@ -3,9 +3,73 @@ title: "P8105 Homework 5"
 author: "Astrid Xu"
 date: "2026-11-18"
 output: github_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 library(tidyverse)
 set.seed(1)
 ```
+
+
+## Q1 Birthday Simulation
+```{r}
+# Randomly sample n birthdays from 1–365. If the number of unique birthdays is less than n, then True at least two people share the same birthday; if false, unique birthdays number should = n.
+
+birthday_sim = function(n) {
+
+  birthdays = sample(1:365, size = n, replace = TRUE)
+
+  n_unique = length(unique(birthdays))
+
+  same_birthday = n_unique < n
+
+  same_birthday
+}
+# Test
+birthday_sim(2)
+
+birthday_sim(10)
+
+birthday_sim(50)
+
+birthday_sim(365)
+```
+
+```{r}
+# 10,000 simulations
+birthday_df =
+  expand_grid(
+    group_size = 2:50,
+    iter = 1:10000
+  )
+
+birthday_df
+
+birthday_results =
+  birthday_df |>
+  mutate(
+    same_birthday = map_lgl(group_size, birthday_sim)
+  )
+
+birthday_results
+
+# Probability
+birthday_stat =
+  birthday_results |>
+  group_by(group_size) |>
+  summarize(
+    probability = mean(same_birthday)
+  )
+
+birthday_stat |>
+  ggplot(aes(x = group_size, y = probability)) +
+  geom_line(color = "seagreen", linewidth = 1) +
+  labs(
+    title = "Probability of Shared Birthdays by Group Size",
+    x = "Group Size",
+    y = "Probability of Shared Birthday"
+  )
+```
+The probability of at least two people sharing a birthday increases with group size. This result makes sense because larger groups contain more people, increasing the chance of shared birthdays. The probability approaches 1 but does not reach 1 within the simulated group sizes, since there is still a small chance that everyone has a different birthday.
